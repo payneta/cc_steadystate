@@ -59,7 +59,7 @@ def Re(u, d, v):
     v -- Kinematic viscosity of cooling water 
     
     """
-	Re = u * (d * 10**-3) / v
+	Re = u * (d) / v
 	return Re
  
 def alpha(d, Re):
@@ -71,27 +71,27 @@ def alpha(d, Re):
     d -- Diameter of cooling channel 
     
     """
-	alpha = (0.031395 / (d * 10**-3)) * (Re**0.8)
+	alpha = (0.031395 / (d)) * (Re**0.8)
 	return alpha
 
 #----------------------------------------------------------------------------------#
 # Basic Variables and Information
 
-s = 2          # Part thickness unit mm 
-x = 30         # Distance x unit mm
-y = 10         # Distance y unit mm
-d = 10         # Diameter of cooling channel unit mm
+s = 2*10**-3           # Part thickness unit mm 
+x = 30*10**-3        # Distance x unit mm
+y = 10*10**-3         # Distance y unit mm
+d = 10*10**-3          # Diameter of cooling channel unit mm
 T_M = 250      # Mold temperature degree Celsius
-T_E = 90       # Demolding temperature degree Celsius
+T_E = 90      # Demolding temperature degree Celsius
 i_m = 130      # Latent heat of fusion of polymer units kJ/kg
-C_Pm = 2.5     # Specific heat of the melt units KJ/(Kg*K)
+C_Pm = 2.5     # Specific heat of the melt units kJ/(kg*K)
 P_m = 0.79     # Melt density units g/cm^3
 k_m = 0.16     # Thermal conductivity of the melt units W/(m*K)
 v = 1.2e-6     # Kinematic viscosity of cooling water units m^2/s
 u = 1          # Velocity of cooling water units m/s
 T_water = 15   # Temperature of cooling water degree Celsius
 k_ST = 45      # Thermal conductivity of mold steel units W/(m*K)   
-
+R= 5 
 T_wall = (T_E + T_water) / 2 # Assumed mold wall temperature
 print(T_wall)
 
@@ -100,20 +100,20 @@ print(T_wall)
 
 iter = 1
 err = 1.0
-eps = 0.03 # Tolerance
+eps = 0.5 # Tolerance
 
 while err > eps:
 	# Calculation for the cooling time
 	t_k = (s**2 / (np.pi**2 * a(k_m, P_m, C_Pm))) * \
 		np.log((4 / np.pi) * ((T_M - T_wall) / (T_E - T_wall)))
 
-	# calculation for the mold temperature
-	T_wall += -0.15 # Guess 
-	
 	# Calculation for the heat received by the cooling agent (water)
 	Q_w = (10**-3 * t_k) * (1 / (k_ST * Se(x, y, d)) + \
-		(1 / (alpha(d, Re(u, d, v)) * (10**-3) * 2 * np.pi * 5)))**-1 * (T_wall - T_water)
-
+		(1 / (alpha(d, Re(u, d, v)) * (10**-3) * 2 * np.pi * R)))**-1 * (T_wall - T_water)
+    
+    # calculation for the mold temperature
+	T_wall = T_water + (Q_w/((10**-3 * t_k) * (1 / (k_ST * Se(x, y, d)) + \
+		(1 / (alpha(d, Re(u, d, v)) * (10**-3) * 2 * np.pi * R)))**-1)) # Guess 
 	# Calculate err
 	err = np.abs(Q_AB(T_M, T_E, C_Pm, i_m, P_m, s, x) - Q_w) / Q_AB(T_M, T_E, C_Pm, i_m, P_m, s, x)
 	
